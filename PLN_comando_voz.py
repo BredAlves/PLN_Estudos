@@ -1,62 +1,44 @@
-print("testando...")
-
-
 import speech_recognition as sr
 import os
 
-#função para ouvir e reconhecer a fala
+def abrir_aplicacao(comando):
+    """Abre a aplicação correspondente ao comando."""
+    aplicacao_map = {
+        "navegador": "Chrome.exe",
+        "excel": "Excel.exe",
+        "powerpoint": "POWERPNT.exe",
+        "edge": "msedge.exe",
+        "spotify": "spotify.exe",
+    }
+    if comando in aplicacao_map:
+        try:
+            os.system(f"start {aplicacao_map[comando]}")
+            print(f"Abrindo {comando}")
+        except FileNotFoundError:
+            print(f"O programa '{comando}' não foi encontrado.")
+
 def ouvir_microfone():
-
-#habilita o microfone do usuario
+    """Escuta e reconhece a fala do usuário."""
     microfone = sr.Recognizer()
-
-#usando o microfone
     with sr.Microphone() as source:
-
-        #chama umlgoritmo d recução de ruidos no som
         microfone.adjust_for_ambient_noise(source)
-
-        #frase para o usuario dizer algo
-        input("Diga Alguma coisa: ")
-
-        #armazena o que foi dito numa variavel
+        print("Diga Alguma coisa:")
         audio = microfone.listen(source)
+        try:
+            frase = microfone.recognize_google(audio, language="pt-br")
+            print(f"Você disse: {frase}")
+            abrir_aplicacao(frase.lower())  # Converta para minúsculas para evitar problemas de case sensitivity
+        except sr.UnknownValueError:
+            print("Não entendi o que você disse. Por favor, tente novamente.")
+        except sr.RequestError as e:
+            print(f"Houve um problema com a requisição; {e}")
+        except Exception as e:
+            print(f"Erro inesperado: {e}")
 
-    try:
-        #passa a variavel para o algoritmo reconhecedor de padroes
-        frase = microfone.recognize_google(audio, language="pt-br")
-
-        if "navegador" in frase:
-            os.system("start Chrome.exe")
-            return False
-        
-        elif "Excel" in frase:
-            os.system("start Excel.exe")
-            return False
-
-        elif "PowerPoint" in frase:
-            os.system("start POWERPNT.exe")
-            return False   
-
-        elif "Edge" in frase:
-            os.system("start msedge.exe")
-            return False     
-
-        elif "Sair" in frase:
-            os.system("exit")   
-            return True
-        
-        #retorna a frase pronunciada
-
-        print("você disse: " + frase)
-
-        #se não reconheceu o padrao de fala, exibe a mensagem
-
-    except sr.UnknownValueError:
-        print("Não entendi")
-
-    return frase
+def sair():
+    """Encerra o programa."""
+    os.system("exit")
 
 while True:
     if ouvir_microfone():
-        break
+        sair()
